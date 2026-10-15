@@ -1,0 +1,157 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>SentryAI - Real-Time Code Auditor</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Fira+Code:wght@400;500;600;700&family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
+  <link rel="stylesheet" href="/static/style.css" />
+</head>
+<body>
+  <!-- Top Navigation Bar -->
+  <header class="app-header">
+    <div class="brand">
+      <div class="brand-icon">
+        <i class="fa-solid fa-shield-halved"></i>
+      </div>
+      <div>
+        <div class="brand-title">Sentry<span class="highlight">AI</span></div>
+      </div>
+      <span class="brand-badge">AST v1.0.0 LIVE</span>
+    </div>
+
+    <!-- Security Vulnerability Attack / Clean Presets -->
+    <div class="presets-container">
+      <span class="preset-label"><i class="fa-solid fa-bolt"></i> PRESETS:</span>
+      <button class="preset-btn" onclick="loadPreset('sqli')">SQL Injection</button>
+      <button class="preset-btn" onclick="loadPreset('rce')">Dynamic RCE</button>
+      <button class="preset-btn" onclick="loadPreset('secrets')">Leaked Secrets</button>
+      <button class="preset-btn" onclick="loadPreset('loops')">O(N²) Complexity</button>
+      <button class="preset-btn" onclick="loadPreset('clean')">Secure Clean</button>
+    </div>
+
+    <!-- Header Live Status & Trigger -->
+    <div class="header-status">
+      <div class="connection-status" id="connectionBadge">
+        <span class="status-dot"></span>
+        <span id="connectionText">CONNECTING...</span>
+      </div>
+      <button class="audit-btn" onclick="triggerAudit()">
+        <i class="fa-solid fa-play"></i> Run Audit
+      </button>
+    </div>
+  </header>
+
+  <!-- Dual Workspace -->
+  <main class="workspace-grid">
+    <!-- Left Editor Pane -->
+    <section class="editor-pane">
+      <div class="pane-header">
+        <div class="file-tab">
+          <i class="fa-brands fa-python"></i>
+          <span>target_payload.py</span>
+          <span class="live-tag">LIVE STREAM</span>
+        </div>
+        <div class="editor-tools">
+          <span class="stats-metric" id="latencyMetric"><i class="fa-solid fa-stopwatch"></i> 0.00 ms</span>
+          <button class="icon-btn" title="Clear Editor" onclick="clearEditor()">
+            <i class="fa-solid fa-trash-can"></i>
+          </button>
+          <button class="icon-btn" title="Copy Source" onclick="copyCode()">
+            <i class="fa-solid fa-copy"></i>
+          </button>
+        </div>
+      </div>
+
+      <div class="editor-wrapper">
+        <div class="line-gutter" id="lineGutter">1</div>
+        <textarea id="codeEditor" spellcheck="false" placeholder="# Paste Python source code here for instant AST audit..."></textarea>
+      </div>
+
+      <div class="editor-footer">
+        <span>AST Parser Engine: active</span>
+        <span>Encoding: UTF-8</span>
+      </div>
+    </section>
+
+    <!-- Right Analysis Pane -->
+    <section class="analysis-pane">
+      <!-- Score Overview Header -->
+      <div class="metrics-card">
+        <div class="score-display">
+          <div class="score-circle" id="scoreCircle">
+            <span class="score-number" id="healthScore">100</span>
+            <span class="score-denom">/ 100</span>
+          </div>
+          <div>
+            <div class="grade-badge" id="riskGrade">A+ SECURE</div>
+            <div class="grade-subtext" id="findingCount">0 issues detected</div>
+          </div>
+        </div>
+
+        <!-- Severity Pills -->
+        <div class="security-pills">
+          <div class="pill critical-pill">
+            <i class="fa-solid fa-circle-exclamation"></i> CRIT: <span id="critCount">0</span>
+          </div>
+          <div class="pill high-pill">
+            <i class="fa-solid fa-triangle-exclamation"></i> HIGH: <span id="highCount">0</span>
+          </div>
+          <div class="pill warn-pill">
+            <i class="fa-solid fa-circle-info"></i> WARN: <span id="warnCount">0</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Findings & Remediation Tabs -->
+      <div class="tab-container">
+        <div class="tabs">
+          <button class="tab-btn active" id="tabFindings" onclick="switchTab('findings')">
+            <i class="fa-solid fa-bug"></i> Security & Quality Findings (<span id="tabCount">0</span>)
+          </button>
+          <button class="tab-btn" id="tabPatch" onclick="switchTab('patch')">
+            <i class="fa-solid fa-wand-magic-sparkles"></i> Automated Remediation Diff
+          </button>
+        </div>
+
+        <!-- Tab 1: Findings List -->
+        <div class="tab-content active" id="findingsView">
+          <div class="findings-list" id="findingsList">
+            <!-- Dynamically injected items -->
+          </div>
+        </div>
+
+        <!-- Tab 2: Remediation Patch -->
+        <div class="tab-content" id="patchView">
+          <div class="patch-header">
+            <span class="patch-summary"><i class="fa-solid fa-shield-check"></i> Proposed AST Security Patch</span>
+            <button class="apply-btn" onclick="applyPatchedCode()">
+              <i class="fa-solid fa-check-double"></i> Apply Patch to Editor
+            </button>
+          </div>
+          <ul class="patch-action-list" id="patchActionList">
+            <!-- Injected patch actions -->
+          </ul>
+          <div class="diff-viewer">
+            <pre><code id="patchedCodeDisplay"># Safe AST patched code will appear here...</code></pre>
+          </div>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <!-- Real-Time Event Stream Terminal Footer -->
+  <footer class="app-terminal">
+    <div class="terminal-bar">
+      <span><i class="fa-solid fa-terminal"></i> SentryAI AST ENGINE REAL-TIME EVENT STREAM</span>
+      <span class="terminal-pulse">● ACTIVE LISTENER</span>
+    </div>
+    <div class="terminal-body" id="terminalLogs"></div>
+  </footer>
+
+  <script src="/static/app.js"></script>
+</body>
+</html>
