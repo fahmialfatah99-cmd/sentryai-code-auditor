@@ -148,6 +148,7 @@ function triggerAudit() {
     language: "python"
   };
 
+  showAuditMood("/static/lottie/loading.lottie", true);
   if (ws && ws.readyState === WebSocket.OPEN) {
     ws.send(JSON.stringify(payload));
   } else {
@@ -164,7 +165,23 @@ function triggerAudit() {
 }
 
 // Render Auditor Output
+function showAuditMood(src, loop) {
+  const el = document.getElementById("auditMood");
+  if (!el) return;
+  el.style.display = "block";
+  if (el.getAttribute("src") !== src) el.setAttribute("src", src);
+  try { el.setLoop(!!loop); } catch (e) {}
+}
+
 function renderAuditResults(data) {
+  const mood = document.getElementById("auditMood");
+  if (mood) {
+    if ((data.total_issues || 0) === 0) {
+      showAuditMood("/static/lottie/success.lottie", false);
+    } else {
+      mood.style.display = "none";
+    }
+  }
   // Latency
   document.getElementById("latencyMetric").innerHTML = `<i class="fa-solid fa-stopwatch"></i> ${data.latency_ms} ms`;
   logTerminal(`[AUDIT] Processed in ${data.latency_ms}ms | Findings: ${data.total_issues} | Score: ${data.health_score}`);
