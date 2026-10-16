@@ -170,7 +170,7 @@ function showAuditMood(src, loop) {
   if (!el) return;
   el.style.display = "block";
   if (el.getAttribute("src") !== src) el.setAttribute("src", src);
-  try { el.setLoop(!!loop); } catch (e) {}
+  try { el.loop = !!loop; } catch (e) {}
 }
 
 function renderAuditResults(data) {
