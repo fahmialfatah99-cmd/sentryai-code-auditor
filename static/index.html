@@ -40,9 +40,14 @@
         <span class="status-dot"></span>
         <span id="connectionText">CONNECTING...</span>
       </div>
+      <select id="langSelect" class="preset-btn" title="Bahasa kode">
+        <option value="python">Python</option>
+        <option value="javascript">JavaScript</option>
+      </select>
       <button class="audit-btn" onclick="triggerAudit()">
         <i class="fa-solid fa-play"></i> Run Audit
       </button>
+      <button class="preset-btn" id="dlReportBtn" onclick="downloadReport()" title="Unduh laporan audit terakhir (Markdown)" style="display:none">⬇ Report</button>
     </div>
   </header>
 
@@ -89,6 +94,7 @@
           </div>
           <div>
             <div class="grade-badge" id="riskGrade">A+ SECURE</div>
+            <div class="grade-subtext" id="historyMini" style="margin-top:4px">Riwayat: memuat...</div>
             <div class="grade-subtext" id="findingCount">0 issues detected</div>
           </div>
           <dotlottie-player id="auditMood" src="/static/lottie/loading.lottie" style="width:72px;height:72px;display:none" autoplay loop></dotlottie-player>

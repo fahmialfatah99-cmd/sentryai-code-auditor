@@ -12,6 +12,8 @@ Backend **FastAPI + WebSocket**, frontend **Next.js**, mesin aturan **AST + heur
 - WebSocket `/ws/audit` → audit live per ketikan
 - 4/4 pytest lolos (`tests/test_auditor.py`)
 - Frontend Next.js build sukses, end-to-end via rewrite teruji
+- JavaScript: 6 aturan (eval, innerHTML, document.write, timer-string, outerHTML, shell)
+- Riwayat audit (SQLite) + unduh laporan Markdown (`/api/history`, `/api/report/{id}`)
 
 ## Aturan yang dideteksi
 

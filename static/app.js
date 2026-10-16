@@ -143,14 +143,17 @@ function triggerAudit() {
     return;
   }
 
+  const langEl = document.getElementById("langSelect");
+  const lang = langEl ? langEl.value : "python";
   const payload = {
     code: code,
-    language: "python"
+    language: lang
   };
 
   showAuditMood("/static/lottie/loading.lottie", true);
   if (ws && ws.readyState === WebSocket.OPEN) {
     ws.send(JSON.stringify(payload));
+    fetchHistoryMini();
   } else {
     // REST API fallback
     fetch("/api/audit", {
@@ -159,7 +162,7 @@ function triggerAudit() {
       body: JSON.stringify(payload)
     })
     .then(res => res.json())
-    .then(data => renderAuditResults(data))
+    .then(data => { renderAuditResults(data); rememberAuditId(data); fetchHistoryMini(); })
     .catch(err => logTerminal(`[REST ERROR] ${err.message}`));
   }
 }
@@ -315,3 +318,28 @@ window.addEventListener("DOMContentLoaded", () => {
   loadPreset("sqli");
   initWebSocket();
 });
+
+let lastAuditId = null;
+function rememberAuditId(data) {
+  if (data && data.audit_id) {
+    lastAuditId = data.audit_id;
+    const b = document.getElementById("dlReportBtn");
+    if (b) b.style.display = "";
+  }
+}
+function downloadReport() {
+  if (lastAuditId) window.open("/api/report/" + lastAuditId, "_blank");
+}
+async function fetchHistoryMini() {
+  try {
+    const res = await fetch("/api/history?limit=5");
+    const d = await res.json();
+    const el = document.getElementById("historyMini");
+    if (!el) return;
+    const rows = d.history || [];
+    el.textContent = rows.length
+      ? "Riwayat: " + rows.map(r => `#${r.id} ${r.score} (${r.issues})`).join(" · ")
+      : "Riwayat: kosong";
+  } catch (e) {}
+}
+window.addEventListener("DOMContentLoaded", () => { fetchHistoryMini(); });

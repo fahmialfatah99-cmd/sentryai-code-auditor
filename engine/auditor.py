@@ -287,6 +287,36 @@ def audit_source_code(code: str, language: str = "python") -> Dict[str, Any]:
                 "suggestion": "Correct the syntax error to allow semantic security AST analysis."
             })
 
+    # 2b. JavaScript/TypeScript rules (regex, tanpa AST)
+    if language.lower() in ("javascript", "js", "typescript", "ts"):
+        js_patterns = [
+            (r"\beval\s*\(", "JS-001", "CRITICAL", "Dangerous eval() in JavaScript",
+             "eval() mengeksekusi string sebagai kode — RCE via XSS.",
+             "Ganti dengan JSON.parse / dispatch map."),
+            (r"\.innerHTML\s*=", "JS-002", "HIGH", "Unsafe innerHTML Assignment",
+             "innerHTML dengan data tak tepercaya = XSS.",
+             "Gunakan textContent atau sanitizer (DOMPurify)."),
+            (r"document\.write\s*\(", "JS-003", "HIGH", "document.write() Usage",
+             "document.write memblokir render dan rentan injeksi.",
+             "Bangun DOM via createElement/appendChild."),
+            (r'set(?:Timeout|Interval)\s*\(\s*["\']', "JS-004", "HIGH", "String eval in Timer",
+             "String sebagai argumen timer = eval terselubung.",
+             "Oper fungsi, bukan string."),
+            (r"\.outerHTML\s*=", "JS-005", "HIGH", "Unsafe outerHTML Assignment",
+             "outerHTML dengan data tak tepercaya = XSS.",
+             "Gunakan textContent atau sanitizer."),
+            (r"child_process|exec\s*\(|spawn\s*\(", "JS-006", "HIGH", "Shell Execution in JS",
+             "Eksekusi shell dari input = command injection.",
+             "Validasi allow-list + execFile tanpa shell."),
+        ]
+        for lineno, line in enumerate(code.splitlines(), 1):
+            for pat, rid, sev, title, desc, sug in js_patterns:
+                if re.search(pat, line):
+                    findings.append({
+                        "rule_id": rid, "category": "JS Security", "severity": sev,
+                        "line": lineno, "title": title, "description": desc, "suggestion": sug,
+                    })
+
     # Calculate overall security health score (0 - 100)
     # Deductions: Critical: 25, High: 15, Warning: 8, Medium: 5
     deduction = 0
